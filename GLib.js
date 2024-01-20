@@ -1,50 +1,96 @@
 class GLib {
-let w = window.innerWidth;
-let h = window.innerHeight;
-const genRanHex = (size) => [...Array(size)].map(() => Math.round(Math.random() * 15).toString(16)).join('');
-const EB = {
-    posType: "px",
-    x: 0,
-    y: 0,
-    width: 50,
-    height: 50,
-    color: "#000000",
-    name: "default",
-    entity: ""
-};
-let Key = {
-    pressed: {},
-    left: "a",
-    up: "w",
-    right: "d",
-    down: "s",
-    isDown: function (key){
-        return this.pressed[key];
-    },
-    keydown: function (event){
-        this.pressed[event.key] = true;
-    },
-    keyup: function (event){
-        delete this.pressed[event.key];
+    static w = window.innerWidth;
+    static h = window.innerHeight;
+    static gamePause = false;
+    static tick = 0;
+
+    static up = window.addEventListener("keyup", function(event) {
+        GLib.Key.keyup(event);
+    });
+    static down = window.addEventListener("keydown", function(event) {
+        GLib.Key.keydown(event);
+    });
+
+    static Key = {
+        pressed: {},
+        left: "a",
+        up: "w",
+        right: "d",
+        down: "s",
+        isDown: function (key){
+            return this.pressed[key];
+        },
+        keydown: function (event){
+            this.pressed[event.key] = true;
+        },
+        keyup: function (event){
+            delete this.pressed[event.key];
+        }
     }
-};
-class Entity {
+
+    static genRanHex = size => [...Array(size)].map(() => Math.round(Math.random() * 15).toString(16)).join('');
+
+    static async isTouching(element1, element2){
+        function touching(x1,y1,w1,h1,x2,y2,w2,h2){
+            if(x2>w1+x1||x1>w2+x2||y2>h1+y1||y1>h2+y2){
+                return false;
+            } else {
+                return true;
+            }
+        }
+        return touching(element1.x,element1.y,element1.width,element1.height,element2.x,element2.y,element2.width,element2.height);
+    }
+
+    static startGame(func, ...params){
+        return setInterval(()=>{
+            GLib.w = window.innerWidth;
+            GLib.h = window.innerHeight;
+            if(!GLib.gamePause){
+                GLib.tick++;
+                func(params);
+            }
+        }, 20);
+    }
+
+    static endGame(game){
+        clearInterval(game);
+        return null;
+    }
+
+    static pause() {
+        GLib.gamePause = !GLib.gamePause;
+    }
+}
+
+class Entity extends GLib {
+
     constructor(obj){
-        Object.assign(this, EB,  obj);
+        super();
+        this.posType = "px";
+        this.x = 0;
+        this.y =  0;
+        this.width = 50;
+        this.height = 50;
+        this.color = "#000000";
+        this.name = "default";
+        this.entity = "";
+
+        Object.assign(this,  obj);
+
         this.entity = document.createElement("div");
         document.body.appendChild(this.entity);
-        //Setting the arguments
+
         this.entity.style.position = "absolute";
         this.entity.style.left = this.x+this.posType;
         this.entity.style.top = this.y+this.posType;
         this.entity.style.width = this.width+this.posType;
         this.entity.style.height = this.height+this.posType;
         this.entity.style.backgroundColor = this.color;
-        this.entity.style.webkitUserSelect =  "none";
         this.entity.style.userSelect = "none";
         this.entity.innerHTML = this.name;
         
     }
+
     move(x, y){
         if(this.x+x<=w-this.width&&this.x+x>=0){
             this.x += x;
@@ -67,14 +113,26 @@ class Entity {
         this.entity.style.left = this.x+this.posType;
         this.entity.style.top = this.y+this.posType;
     }
-    //A method to move the instance to a specified location
+
     moveTo(x, y){
         this.x = (x<=w-this.width&&x>=0) ? x : 0;
         this.y = (y<=h-this.height&&y>=0) ? y : 0;
         this.entity.style.left = this.x+this.posType;
         this.entity.style.top = this.y+this.posType;
     }
-    //A method to delete the instance or properties of the element
+
+    moveLine(...destination){
+        if(destination.length==1||destination.length==3){//target entity, optional(xModifiers, yModifiers)
+            let mX = (destination[0].x-this.x)/Math.sqrt((destination[0].x-this.x)*(destination[0].x-this.x)+(destination[0].y-this.y)*(destination[0].y-this.y));
+            let mY = (destination[0].y-this.y)/Math.sqrt((destination[0].x-this.x)*(destination[0].x-this.x)+(destination[0].y-this.y)*(destination[0].y-this.y));
+            this.move(((destination.length==1) ? mX : mX*destination[1]), ((destination.length==1) ? mY : mY*destination[2]));
+        } else if(destination.length==2||destination.length==4){//target x, y, optional(xModifiers, yModifiers)
+            let mX = (destination[0]-this.x)/Math.sqrt((destination[0]-this.x)*(destination[0]-this.x)+(destination[1]-this.y)*(destination[1]-this.y));
+            let mY = (destination[1]-this.y)/Math.sqrt((destination[0]-this.x)*(destination[0]-this.x)+(destination[1]-this.y)*(destination[1]-this.y));
+            this.move(((destination.length==1) ? mX : mX*destination[2]), ((destination.length==1) ? mY : mY*destination[3]));
+        }
+    }
+
     delete(delay, property){
         setTimeout(()=>{
             if(property!="all"){
@@ -85,172 +143,19 @@ class Entity {
             }
         },delay);
     }
-    //A basic rectangle collision detector
-    static isTouching(element1, element2){
-        function touching(x1,y1,w1,h1,x2,y2,w2,h2){
-            if(x2>w1+x1||x1>w2+x2||y2>h1+y1||y1>h2+y2){
-                return false;
-            } else {
-                return true;
-            }
-        }
-        return touching(element1.x,element1.y,element1.width,element1.height,element2.x,element2.y,element2.width,element2.height);
-    }
 }
-//The unique arguments of the player entity
-let player = {
-    color: "#123456",
-    name: ""
-}
-//changing color if low quality is enabled
-if(lowQuality){
-    player.color = "transparent";
-}
-//The arguments of the lasers
-let laser = {
-    width: 10,
-    height: 10,
-    color: "red",
-    name: ""
-}
-//changing color if low quality is enabled
-if(lowQuality){
-    laser.color = "transparent";
-}
-//The unique arguments of the enemy entity
-let enemy = {
-    color: "transparent",
-    name: ""
-}
-//The bounding area where enemies will not spawn, and also it explains info at the start
-let noEnemy = {
-    posType: "%",
-    x: 12.5,
-    y: 12.5,
-    width: 75,
-    height: 75,
-    color: "#888888",
-    name: ""
-};
-//Score counter
-let scoreTxt = {
-    color: "#ffffff",
-    name: score
-}
-//Creating the player instance and bringing it to the front
-const PLAYER = new Entity(player);
-PLAYER.entity.style.zIndex = 1;
-//Grabbing the player hitbox and other info
-let playerInfo = PLAYER.entity.getBoundingClientRect();
 
-//Creating the box where enemies cannot spawn
-const NO_ENEMY = new Entity(noEnemy);
-NO_ENEMY.entity.style.zIndex = 2;
-//Providing information
-const startGame = setInterval(()=>{
-    NO_ENEMY.entity.innerHTML = "<h1 style='text-align: center;'>Welcome to My Shooter Game</h1><br><br><h2>Controls:</h2><br><h3>W is up, a is left, s is down, d is right, left click to shoot towards the mouse cursor, and escape is to pause. Your goal is to gain the highest score possible, to do that, shoot enemies. If an enemy touches you, the game will end. To enable low definition, press p now. To switch between easy mode, normal mode, hard mode, harder mode, or impossible mode, press h. Note: You earn less points in easy mode, and more in the harder difficulties. To exit this menu, press escape.</h3><br><h3>Current difficulty scaling: "+((scale==1000) ? "easy mode" : (scale==500) ? "normal mode" : (scale==400) ? "hard mode" : (scale==250) ? "harder mode" : "impossible mode")+"</h3>";
-}, 20);
-//Creating the scoreboard
-const SCORE_BOX = new Entity(scoreTxt);
-SCORE_BOX.entity.style.zIndex = 3;
-SCORE_BOX.moveTo(w-SCORE_BOX.width, 0);
-PLAYER.moveTo((w/2)-playerInfo.width, (h/2)-playerInfo.height);
-//Tick counter
-let tick=0;
-//Key detecting
-window.addEventListener("keyup", function(event) {
-    Key.keyup(event);
-});
-window.addEventListener("keydown", function(event) {
-    Key.keydown(event);
-});
-//Laser spawning
-window.addEventListener("click", function(event) {
-    if(!gamePause){
-        //distance formula
-        let mX = (event.clientX-(PLAYER.x+PLAYER.width/2))/Math.sqrt((event.clientX-(PLAYER.x+PLAYER.width/2))*(event.clientX-(PLAYER.x+PLAYER.width/2))+(event.clientY-(PLAYER.y+PLAYER.height/2))*(event.clientY-(PLAYER.y+PLAYER.height/2)));
-        let mY = (event.clientY-(PLAYER.y+PLAYER.height/2))/Math.sqrt((event.clientX-(PLAYER.x+PLAYER.width/2))*(event.clientX-(PLAYER.x+PLAYER.width/2))+(event.clientY-(PLAYER.y+PLAYER.height/2))*(event.clientY-(PLAYER.y+PLAYER.height/2)));
-        laser.x = PLAYER.x+PLAYER.width/2-laser.width/2;
-        laser.y = PLAYER.y+PLAYER.height/2-laser.width/2;
-        lasers.push(new Entity(laser), mX*20, mY*20);
+// Example
+let index = 0;
+const DISPLAY = new Entity({color: "#123456", name: "no"});
+let gameLoop = GLib.startGame(()=>{
+    if(GLib.Key.isDown(GLib.Key.up)){
+        index++;
+        DISPLAY.entity.innerHTML = `${index}, ${GLib.w}`;
+    }
+
+    if(index==10){
+        DISPLAY.entity.innerHTML = "done";
+        gameLoop = GLib.endGame(gameLoop);
     }
 });
-//Pause function
-window.addEventListener("keydown", function(event) {
-    if(!escapePause){
-        if(event.key=="Escape"){
-            if(gamePause){
-                gamePause = false;
-                NO_ENEMY.entity.style.display = "none";
-                clearInterval(startGame);
-            } else {
-                gamePause = true;
-            }
-        }
-    }
-});
-//Difficulty scaling
-window.addEventListener("keydown", function(event) {
-    if(gamePause){
-        if(event.key=="h"){
-            if(scale==1000){
-                scale = 500;
-                scoreMult = 100;
-            } else if(scale==500){
-                scale = 400;
-                scoreMult = 125;
-            } else if(scale==400){
-                scale = 250;
-                scoreMult = 200;
-            } else if(scale==250){
-                scale = 100;
-                scoreMult = 500;
-            } else {
-                scale = 1000;
-                scoreMult = 25;
-            }
-        }
-    }
-});
-//Creating lists for storing enemies and lasers
-let enemies = [];
-let enemyCount = 0;
-let lasers = [];
-//Updating the screen
-setInterval(()=>{
-    //Low quality option
-    if(Key.isDown(Key.p)){
-        if(lowQuality){
-            lowQuality = false;
-        } else {
-            lowQuality = true;
-            PLAYER.entity.style.backgroundColor = "transparent";
-            PLAYER.entity.innerHTML = "player";
-            laser.color = "transparent";
-            laser.name = "laser";
-            enemy.color = "transparent";
-        }
-    }
-    //Main section of logic
-    if(!gamePause){
-        //Score counter
-        SCORE_BOX.entity.innerHTML = `Score: ${score}`;
-        //Incrementing tick counter
-        tick++;
-        //Updating the bounds of the screen
-        w = window.innerWidth;
-        h = window.innerHeight;
-        //Movement
-        if(Key.isDown(Key.up)){
-            PLAYER.move(0, -5);
-        }
-        if(Key.isDown(Key.left)){
-            PLAYER.move(-5, 0);
-        }
-        if(Key.isDown(Key.down)){
-            PLAYER.move(0, 5);
-        }
-        if(Key.isDown(Key.right)){
-            PLAYER.move(5, 0);
-        }
-}

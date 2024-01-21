@@ -1,16 +1,18 @@
 class GLib {
-    static w = window.innerWidth;
-    static h = window.innerHeight;
-    static gamePause = false;
-    static tick = 0;
+    static w = window.innerWidth; // width of window
+    static h = window.innerHeight; // height of window
+    static gamePause = false; // a boolean if the game is paused
+    static tick = 0; // a tick counter
 
-    static up = window.addEventListener("keyup", function(event) {
+    // keyup and keydown detection
+    static up = window.addEventListener("keyup", function(event) { 
         GLib.Key.keyup(event);
     });
     static down = window.addEventListener("keydown", function(event) {
         GLib.Key.keydown(event);
     });
 
+    // keybinds
     static Key = {
         pressed: {},
         left: "a",
@@ -28,8 +30,14 @@ class GLib {
         }
     }
 
-    static genRanHex = size => [...Array(size)].map(() => Math.round(Math.random() * 15).toString(16)).join('');
+    // random color generator
+    static genRanHex = (size)=>{
+        return [...Array(size)].map(()=>{
+            return Math.round(Math.random() * 16).toString(16)
+        }).join('')
+    }
 
+    // detects if two elements touch
     static async isTouching(element1, element2){
         function touching(x1,y1,w1,h1,x2,y2,w2,h2){
             if(x2>w1+x1||x1>w2+x2||y2>h1+y1||y1>h2+y2){
@@ -41,6 +49,7 @@ class GLib {
         return touching(element1.x,element1.y,element1.width,element1.height,element2.x,element2.y,element2.width,element2.height);
     }
 
+    // creates a new game loop
     static startGame(func, ...params){
         return setInterval(()=>{
             GLib.w = window.innerWidth;
@@ -52,18 +61,22 @@ class GLib {
         }, 20);
     }
 
+    // ends a game loop
     static endGame(game){
         clearInterval(game);
         return null;
     }
 
+    // pause/unpause the game
     static pause() {
         GLib.gamePause = !GLib.gamePause;
     }
 }
 
+// a subclass of GLib made for creating sprites
 class Entity extends GLib {
 
+    // base instructions for when an instance of Entity is created
     constructor(obj){
         super();
         this.posType = "px";
@@ -91,6 +104,7 @@ class Entity extends GLib {
         
     }
 
+    // allows movement of an instance
     move(x, y){
         if(this.x+x<=GLib.w-this.width&&this.x+x>=0){
             this.x += x;
@@ -114,6 +128,7 @@ class Entity extends GLib {
         this.entity.style.top = this.y+this.posType;
     }
 
+    // allows movement to a set position
     moveTo(x, y){
         this.x = (x<=w-this.width&&x>=0) ? x : 0;
         this.y = (y<=h-this.height&&y>=0) ? y : 0;
@@ -121,6 +136,7 @@ class Entity extends GLib {
         this.entity.style.top = this.y+this.posType;
     }
 
+    // allows an instance to move in a smooth line towards another instance or a set position
     moveLine(...destination){
         if(destination.length==1||destination.length==3){//target entity, optional(xModifiers, yModifiers)
             let mX = (destination[0].x-this.x)/Math.sqrt((destination[0].x-this.x)*(destination[0].x-this.x)+(destination[0].y-this.y)*(destination[0].y-this.y));
@@ -141,6 +157,7 @@ class Entity extends GLib {
         }
     }
 
+    // allows an instance to move in a less smooth but easier to work with line towards another instance or a set position
     moveLineRounded(...destination){
         if(destination.length==1||destination.length==3){//target entity, optional(xModifiers, yModifiers)
             let mX = Math.round((destination[0].x-this.x)/Math.sqrt((destination[0].x-this.x)*(destination[0].x-this.x)+(destination[0].y-this.y)*(destination[0].y-this.y)));
@@ -161,6 +178,7 @@ class Entity extends GLib {
         }
     }
 
+    // allows the deletion of an instance
     delete(delay, property){
         setTimeout(()=>{
             if(property!="all"){
@@ -172,10 +190,12 @@ class Entity extends GLib {
         },delay);
     }
 
+    // a function to check if the instance is touching another instance
     async isTouching(element){
         return await GLib.isTouching(this, element);
     }
 
+    // a function which allows some code to be run when an instance touches and/or leaves an instance
     async onTouch(element, func, not){
         this.touch = await this.isTouching(element);
         this.oT = setInterval(()=>{
@@ -203,6 +223,8 @@ class Entity extends GLib {
             
         });
     }
+
+    // a function which allows some code to be run when an instance is touching and/or not touching an instance
     async whileTouching(element, func, not){
         this.touch = await this.isTouching(element);
         this.wT = setInterval(()=>{

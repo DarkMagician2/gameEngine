@@ -171,16 +171,79 @@ class Entity extends GLib {
             }
         },delay);
     }
+
+    async isTouching(element){
+        return await GLib.isTouching(this, element);
+    }
+
+    async onTouch(element, func, not){
+        this.touch = await this.isTouching(element);
+        this.oT = setInterval(()=>{
+            this.isTouching(element).then((value)=>{
+                this.touch = value;
+            });
+            if(this.oTS==null){
+                this.oTS = 0;
+            }
+            if(this.touch){
+                if(this.oTS==0||this.oTS==2){
+                    this.oTS = 1;
+                    if(func!=null){
+                        func();
+                    }
+                }
+            } else {
+                if(this.oTS==1){
+                    this.oTS = 2;
+                    if(not!=null){
+                        not();
+                    }
+                }
+            }
+            
+        });
+    }
+    async whileTouching(element, func, not){
+        this.touch = await this.isTouching(element);
+        this.wT = setInterval(()=>{
+            this.isTouching(element).then((value)=>{
+                this.touch = value;
+            });
+            if(this.touch){
+                if(func!=null){
+                    func();
+                }
+            } else {
+                if(not!=null){
+                    not();
+                }
+            }
+        });
+    }
 }
 
 // Example
 let index = 0;
 const DISPLAY = new Entity({color: "#123456", name: "no"});
+const TOUCHING = new Entity({x: 100, y: 100});
+DISPLAY.onTouch(TOUCHING, ()=>{
+    alert("touch");
+});
 let gameLoop = GLib.startGame((mult)=>{
+    
     if(GLib.Key.isDown(GLib.Key.up)){
         index++;
         DISPLAY.entity.innerHTML = `${index}, ${GLib.w}`;
-        DISPLAY.moveLine(500, 300);
+        DISPLAY.move(0, -6);
+    }
+    if(GLib.Key.isDown(GLib.Key.down)){
+        DISPLAY.move(0, 6);
+    }
+    if(GLib.Key.isDown(GLib.Key.left)){
+        DISPLAY.move(-6, 0);
+    }
+    if(GLib.Key.isDown(GLib.Key.right)){
+        DISPLAY.move(6, 0);
     }
 
     if(Math.abs(500-DISPLAY.x)<=1&&Math.abs(300-DISPLAY.y)<=1){

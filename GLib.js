@@ -184,43 +184,36 @@ class Entity extends GLib {
 
     async makeMoveable(playerSpeed){
         this.m = setInterval(()=>{
-            function touching(x1,y1,w1,h1,x2,y2,w2,h2){
-                if(x2>w1+x1||x1>w2+x2||y2>h1+y1||y1>h2+y2){
-                    return false;
-                } else {
-                    return true;
-                }
-            }
             for(let i=0;i<Object.keys(GLib.entities).length;i++){
                 if(GLib.entities[i]!=this){
                     let nextPos = Object.assign({}, GLib.entities[i]);
                     if(GLib.Key.isDown(GLib.Key.up)){
                         nextPos = Object.assign({}, GLib.entities[i]);
                         nextPos.y -= playerSpeed;
-                        if(touching(this.x,this.y,this.width,this.height,nextPos.x,nextPos.y,nextPos.width,nextPos.height)){
+                        this.isTouching(nextPos).then((value)=>{
                             this.move(0, -1*playerSpeed);
-                        }
+                        });
                     }
                     if(GLib.Key.isDown(GLib.Key.down)){
                         nextPos = Object.assign({}, GLib.entities[i]);
                         nextPos.y += playerSpeed;
-                        if(touching(this.x,this.y,this.width,this.height,nextPos.x,nextPos.y,nextPos.width,nextPos.height)){
+                        this.isTouching(nextPos).then((value)=>{
                             this.move(0, playerSpeed);
-                        }
+                        });
                     }
                     if(GLib.Key.isDown(GLib.Key.left)){
                         nextPos = Object.assign({}, GLib.entities[i]);
                         nextPos.x -= playerSpeed;
-                        if(touching(this.x,this.y,this.width,this.height,nextPos.x,nextPos.y,nextPos.width,nextPos.height)){
+                        this.isTouching(nextPos).then((value)=>{
                             this.move(-1*playerSpeed, 0);
-                        }
+                        });
                     }
                     if(GLib.Key.isDown(GLib.Key.right)){
                         nextPos = Object.assign({}, GLib.entities[i]);
                         nextPos.x += playerSpeed;
-                        if(touching(this.x,this.y,this.width,this.height,nextPos.x,nextPos.y,nextPos.width,nextPos.height)){
+                        this.isTouching(nextPos).then((value)=>{
                             this.move(playerSpeed, 0);
-                        }
+                        });
                     }
                 }
             }

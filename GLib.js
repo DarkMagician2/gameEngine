@@ -3,6 +3,7 @@ class GLib {
     static h = window.innerHeight; // height of window
     static gamePause = false; // a boolean if the game is paused
     static tick = 0; // a tick counter
+    static entities = {};
 
     // keyup and keydown detection
     static up = window.addEventListener("keyup", function(event) { 
@@ -79,6 +80,7 @@ class Entity extends GLib {
     // base instructions for when an instance of Entity is created
     constructor(obj){
         super();
+        GLib.entities[Object.keys(GLib.entities).length] = this;
         this.posType = "px";
         this.x = 0;
         this.y =  0;
@@ -87,6 +89,7 @@ class Entity extends GLib {
         this.color = "#000000";
         this.name = "default";
         this.entity = "";
+        this.moveable = false;
 
         Object.assign(this,  obj);
 
@@ -178,6 +181,52 @@ class Entity extends GLib {
         }
     }
 
+
+    async makeMoveable(playerSpeed){
+        this.m = setInterval(()=>{
+            function touching(x1,y1,w1,h1,x2,y2,w2,h2){
+                if(x2>w1+x1||x1>w2+x2||y2>h1+y1||y1>h2+y2){
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+            for(let i=0;i<Object.keys(GLib.entities).length;i++){
+                if(GLib.entities[i]!=this){
+                    let nextPos = Object.assign({}, GLib.entities[i]);
+                    if(GLib.Key.isDown(GLib.Key.up)){
+                        nextPos = Object.assign({}, GLib.entities[i]);
+                        nextPos.y -= playerSpeed;
+                        if(touching(this.x,this.y,this.width,this.height,nextPos.x,nextPos.y,nextPos.width,nextPos.height)){
+                            this.move(0, -1*playerSpeed);
+                        }
+                    }
+                    if(GLib.Key.isDown(GLib.Key.down)){
+                        nextPos = Object.assign({}, GLib.entities[i]);
+                        nextPos.y += playerSpeed;
+                        if(touching(this.x,this.y,this.width,this.height,nextPos.x,nextPos.y,nextPos.width,nextPos.height)){
+                            this.move(0, playerSpeed);
+                        }
+                    }
+                    if(GLib.Key.isDown(GLib.Key.left)){
+                        nextPos = Object.assign({}, GLib.entities[i]);
+                        nextPos.x -= playerSpeed;
+                        if(touching(this.x,this.y,this.width,this.height,nextPos.x,nextPos.y,nextPos.width,nextPos.height)){
+                            this.move(-1*playerSpeed, 0);
+                        }
+                    }
+                    if(GLib.Key.isDown(GLib.Key.right)){
+                        nextPos = Object.assign({}, GLib.entities[i]);
+                        nextPos.x += playerSpeed;
+                        if(touching(this.x,this.y,this.width,this.height,nextPos.x,nextPos.y,nextPos.width,nextPos.height)){
+                            this.move(playerSpeed, 0);
+                        }
+                    }
+                }
+            }
+        }, 20);
+    }
+
     // allows the deletion of an instance
     delete(delay, property){
         setTimeout(()=>{
@@ -248,9 +297,8 @@ class Entity extends GLib {
 let index = 0;
 const DISPLAY = new Entity({color: "#123456", name: "no"});
 const TOUCHING = new Entity({x: 100, y: 100});
-DISPLAY.onTouch(TOUCHING, ()=>{
-    alert("touch");
-});
+DISPLAY.entity.innerHTML = GLib.entities[1].moveable;
+TOUCHING.makeMoveable(6);
 let gameLoop = GLib.startGame((mult)=>{
     
     if(GLib.Key.isDown(GLib.Key.up)){

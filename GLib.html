@@ -63,7 +63,7 @@
                         GLib.tick++;
                         func(params);
                     }
-                }, 20);
+                }, 10);
             }
 
             // ends a game loop
@@ -195,33 +195,41 @@
                                 nextPos = Object.assign({}, GLib.entities[i]);
                                 nextPos.y -= playerSpeed;
                                 this.isTouching(nextPos).then((value)=>{
-                                    this.move(0, -1*playerSpeed);
+                                    if(value){
+                                        this.move(0, -1*playerSpeed);
+                                    }
                                 });
                             }
                             if(GLib.Key.isDown(GLib.Key.down)){
                                 nextPos = Object.assign({}, GLib.entities[i]);
                                 nextPos.y += playerSpeed;
                                 this.isTouching(nextPos).then((value)=>{
-                                    this.move(0, playerSpeed);
+                                    if(value){
+                                        this.move(0, playerSpeed);
+                                    }
                                 });
                             }
                             if(GLib.Key.isDown(GLib.Key.left)){
                                 nextPos = Object.assign({}, GLib.entities[i]);
                                 nextPos.x -= playerSpeed;
                                 this.isTouching(nextPos).then((value)=>{
-                                    this.move(-1*playerSpeed, 0);
+                                    if(value){
+                                        this.move(-1*playerSpeed, 0);
+                                    }
                                 });
                             }
                             if(GLib.Key.isDown(GLib.Key.right)){
                                 nextPos = Object.assign({}, GLib.entities[i]);
                                 nextPos.x += playerSpeed;
                                 this.isTouching(nextPos).then((value)=>{
-                                    this.move(playerSpeed, 0);
+                                    if(value){
+                                        this.move(playerSpeed, 0);
+                                    }
                                 });
                             }
                         }
                     }
-                }, 20);
+                }, 10);
             }
 
             // allows the deletion of an instance

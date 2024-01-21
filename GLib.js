@@ -92,21 +92,21 @@ class Entity extends GLib {
     }
 
     move(x, y){
-        if(this.x+x<=w-this.width&&this.x+x>=0){
+        if(this.x+x<=GLib.w-this.width&&this.x+x>=0){
             this.x += x;
         } else if(this.x+x<0){
             this.x = 0;
-        } else if(this.x+x>w-this.width){
-            this.x = w-this.width;
+        } else if(this.x+x>GLib.w-this.width){
+            this.x = GLib.w-this.width;
         } else {
             this.x += 0;
         }
-        if(this.y+y<=h-this.height&&this.y+y>=0){
+        if(this.y+y<=GLib.h-this.height&&this.y+y>=0){
             this.y += y;
         } else if(this.y+y<0){
             this.y = 0;
-        } else if(this.y+y>h-this.height){
-            this.y = h-this.height;
+        } else if(this.y+y>GLib.h-this.height){
+            this.y = GLib.h-this.height;
         } else {
             this.y += 0;
         }
@@ -125,11 +125,39 @@ class Entity extends GLib {
         if(destination.length==1||destination.length==3){//target entity, optional(xModifiers, yModifiers)
             let mX = (destination[0].x-this.x)/Math.sqrt((destination[0].x-this.x)*(destination[0].x-this.x)+(destination[0].y-this.y)*(destination[0].y-this.y));
             let mY = (destination[0].y-this.y)/Math.sqrt((destination[0].x-this.x)*(destination[0].x-this.x)+(destination[0].y-this.y)*(destination[0].y-this.y));
-            this.move(((destination.length==1) ? mX : mX*destination[1]), ((destination.length==1) ? mY : mY*destination[2]));
+            if(destination.length==1){
+                this.move(mX, mY);
+            } else {
+                this.move(mX*destination[1], mY*destination[2]);
+            }
         } else if(destination.length==2||destination.length==4){//target x, y, optional(xModifiers, yModifiers)
             let mX = (destination[0]-this.x)/Math.sqrt((destination[0]-this.x)*(destination[0]-this.x)+(destination[1]-this.y)*(destination[1]-this.y));
             let mY = (destination[1]-this.y)/Math.sqrt((destination[0]-this.x)*(destination[0]-this.x)+(destination[1]-this.y)*(destination[1]-this.y));
-            this.move(((destination.length==1) ? mX : mX*destination[2]), ((destination.length==1) ? mY : mY*destination[3]));
+            if(destination.length==2){
+                this.move(mX, mY);
+            } else {
+                this.move(mX*destination[2], mY*destination[3]);
+            }
+        }
+    }
+
+    moveLineRounded(...destination){
+        if(destination.length==1||destination.length==3){//target entity, optional(xModifiers, yModifiers)
+            let mX = Math.round((destination[0].x-this.x)/Math.sqrt((destination[0].x-this.x)*(destination[0].x-this.x)+(destination[0].y-this.y)*(destination[0].y-this.y)));
+            let mY = Math.round((destination[0].y-this.y)/Math.sqrt((destination[0].x-this.x)*(destination[0].x-this.x)+(destination[0].y-this.y)*(destination[0].y-this.y)));
+            if(destination.length==1){
+                this.move(mX, mY);
+            } else {
+                this.move(mX*destination[1], mY*destination[2]);
+            }
+        } else if(destination.length==2||destination.length==4){//target x, y, optional(xModifiers, yModifiers)
+            let mX = Math.round((destination[0]-this.x)/Math.sqrt((destination[0]-this.x)*(destination[0]-this.x)+(destination[1]-this.y)*(destination[1]-this.y)));
+            let mY = Math.round((destination[1]-this.y)/Math.sqrt((destination[0]-this.x)*(destination[0]-this.x)+(destination[1]-this.y)*(destination[1]-this.y)));
+            if(destination.length==2){
+                this.move(mX, mY);
+            } else {
+                this.move(mX*destination[2], mY*destination[3]);
+            }
         }
     }
 
@@ -148,14 +176,15 @@ class Entity extends GLib {
 // Example
 let index = 0;
 const DISPLAY = new Entity({color: "#123456", name: "no"});
-let gameLoop = GLib.startGame(()=>{
+let gameLoop = GLib.startGame((mult)=>{
     if(GLib.Key.isDown(GLib.Key.up)){
         index++;
         DISPLAY.entity.innerHTML = `${index}, ${GLib.w}`;
+        DISPLAY.moveLine(500, 300);
     }
 
-    if(index==10){
+    if(Math.abs(500-DISPLAY.x)<=1&&Math.abs(300-DISPLAY.y)<=1){
         DISPLAY.entity.innerHTML = "done";
         gameLoop = GLib.endGame(gameLoop);
     }
-});
+}, 3);

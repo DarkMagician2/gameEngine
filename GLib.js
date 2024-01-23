@@ -4,6 +4,7 @@ class GLib {
     static gamePause = false; // a boolean if the game is paused
     static tick = 0; // a tick counter
     static entities = {};
+    static player;
 
     // keyup and keydown detection
     static up = window.addEventListener("keyup", function(event) { 
@@ -30,7 +31,7 @@ class GLib {
             delete this.pressed[event.key];
         }
     }
-
+    
     // random color generator
     static genRanHex = (size)=>{
         return [...Array(size)].map(()=>{
@@ -51,7 +52,8 @@ class GLib {
     }
 
     // creates a new game loop
-    static startGame(func, ...params){
+    static startGame(player, func, ...params){
+        GLib.player = player;
         return setInterval(()=>{
             GLib.w = window.innerWidth;
             GLib.h = window.innerHeight;
@@ -107,6 +109,11 @@ class Entity extends GLib {
         
     }
 
+
+    static get entitiesLength(){
+        return Object.keys(GLib.entities).length;
+    }
+    
     // allows movement of an instance
     move(x, y){
         if(this.x+x<=GLib.w-this.width&&this.x+x>=0){
@@ -235,7 +242,7 @@ class Entity extends GLib {
                 this.entity.removeAttribute(property);
             } else {
                 this.entity.remove();
-                delete this;
+                delete GLib.entities[this];
             }
         },delay);
     }
@@ -292,13 +299,18 @@ let index = 0;
 const DISPLAY = new Entity({color: "#123456", name: "no"});
 const TOUCHING = new Entity({x: 100, y: 100});
 const TEST = new Entity({x: 200, y: 200, width: 500, height: 1000});
+document.addEventListener("click", ()=>{
+    const example = new Entity();
+    example.makeMoveable(3);
+});
 TOUCHING.makeMoveable(3);
 
-TEST.onTouch(DISPLAY, null, ()=>{
+TEST.onTouch(TOUCHING, null, ()=>{
     DISPLAY.moveTo(0, 0);
+    TOUCHING.delete(0, "all");
 });
-let gameLoop = GLib.startGame((mult)=>{
-    DISPLAY.entity.innerHTML = TEST.oTS;
+let gameLoop = GLib.startGame(DISPLAY, (mult)=>{
+    DISPLAY.entity.innerHTML = Entity.entitiesLength;
     
     if(GLib.Key.isDown(GLib.Key.up)){
         index++;
@@ -307,6 +319,7 @@ let gameLoop = GLib.startGame((mult)=>{
     }
     if(GLib.Key.isDown(GLib.Key.down)){
         DISPLAY.move(0, 3);
+        
     }
     if(GLib.Key.isDown(GLib.Key.left)){
         DISPLAY.move(-3, 0);

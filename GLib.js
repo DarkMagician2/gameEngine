@@ -83,6 +83,7 @@ class Entity extends GLib {
     constructor(obj){
         super();
         GLib.entities[Object.keys(GLib.entities).length] = this;
+        this.pos = Entity.entitiesLength-1;
         this.posType = "px";
         this.x = 0;
         this.y =  0;
@@ -112,6 +113,15 @@ class Entity extends GLib {
 
     static get entitiesLength(){
         return Object.keys(GLib.entities).length;
+    }
+
+
+    get index(){
+        for(let i=0;i<Entity.entitiesLength;i++){
+            if(GLib.entities[i]==this){
+                return i;
+            }
+        }
     }
     
     // allows movement of an instance
@@ -242,7 +252,10 @@ class Entity extends GLib {
                 this.entity.removeAttribute(property);
             } else {
                 this.entity.remove();
-                delete GLib.entities[this];
+                delete GLib.entities[this.index];
+                for(let i=0;i<Entity.entitiesLength;i++){
+                    GLib.entities[i].pos = i;
+                }
             }
         },delay);
     }
@@ -256,6 +269,9 @@ class Entity extends GLib {
     async onTouch(element, func, not){
         this.oTS = 0;
         this.oT = setInterval(()=>{
+            if(element==null){
+                clearInterval(this.oT);
+            }
             this.isTouching(element).then((value)=>{
                 this.touch = value;
             });
@@ -278,6 +294,9 @@ class Entity extends GLib {
     // a function which allows some code to be run when an instance is touching and/or not touching an instance
     async whileTouching(element, func, not){
         this.wT = setInterval(()=>{
+            if(element==null){
+                clearInterval(this.wT);
+            }
             this.isTouching(element).then((value)=>{
                 this.touch = value;
             });
@@ -306,6 +325,7 @@ document.addEventListener("click", ()=>{
 TOUCHING.makeMoveable(3);
 
 TEST.onTouch(TOUCHING, null, ()=>{
+    alert("trigger");
     DISPLAY.moveTo(0, 0);
     TOUCHING.delete(0, "all");
 });

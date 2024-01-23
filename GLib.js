@@ -133,8 +133,8 @@ class Entity extends GLib {
 
     // allows movement to a set position
     moveTo(x, y){
-        this.x = (x<=w-this.width&&x>=0) ? x : 0;
-        this.y = (y<=h-this.height&&y>=0) ? y : 0;
+        this.x = (x<=GLib.w-this.width&&x>=0) ? x : 0;
+        this.y = (y<=GLib.h-this.height&&y>=0) ? y : 0;
         this.entity.style.left = this.x+this.posType;
         this.entity.style.top = this.y+this.posType;
     }
@@ -247,14 +247,11 @@ class Entity extends GLib {
 
     // a function which allows some code to be run when an instance touches and/or leaves an instance
     async onTouch(element, func, not){
-        this.touch = await this.isTouching(element);
+        this.oTS = 0;
         this.oT = setInterval(()=>{
             this.isTouching(element).then((value)=>{
                 this.touch = value;
             });
-            if(this.oTS==null){
-                this.oTS = 0;
-            }
             if(this.touch){
                 if(this.oTS==0||this.oTS==2){
                     this.oTS = 1;
@@ -262,21 +259,17 @@ class Entity extends GLib {
                         func();
                     }
                 }
-            } else {
-                if(this.oTS==1){
-                    this.oTS = 2;
-                    if(not!=null){
-                        not();
-                    }
+            } else if(this.oTS==1){
+                this.oTS = 2;
+                if(not!=null){
+                    not();
                 }
             }
-            
-        });
+        }, 10);
     }
 
     // a function which allows some code to be run when an instance is touching and/or not touching an instance
     async whileTouching(element, func, not){
-        this.touch = await this.isTouching(element);
         this.wT = setInterval(()=>{
             this.isTouching(element).then((value)=>{
                 this.touch = value;
@@ -290,7 +283,7 @@ class Entity extends GLib {
                     not();
                 }
             }
-        });
+        }, 10);
     }
 }
 
@@ -298,23 +291,28 @@ class Entity extends GLib {
 let index = 0;
 const DISPLAY = new Entity({color: "#123456", name: "no"});
 const TOUCHING = new Entity({x: 100, y: 100});
-DISPLAY.entity.innerHTML = GLib.entities[1].moveable;
-TOUCHING.makeMoveable(6);
+const TEST = new Entity({x: 200, y: 200, width: 500, height: 1000});
+TOUCHING.makeMoveable(3);
+
+TEST.onTouch(DISPLAY, null, ()=>{
+    DISPLAY.moveTo(0, 0);
+});
 let gameLoop = GLib.startGame((mult)=>{
+    DISPLAY.entity.innerHTML = TEST.oTS;
     
     if(GLib.Key.isDown(GLib.Key.up)){
         index++;
         DISPLAY.entity.innerHTML = `${index}, ${GLib.w}`;
-        DISPLAY.move(0, -6);
+        DISPLAY.move(0, -3);
     }
     if(GLib.Key.isDown(GLib.Key.down)){
-        DISPLAY.move(0, 6);
+        DISPLAY.move(0, 3);
     }
     if(GLib.Key.isDown(GLib.Key.left)){
-        DISPLAY.move(-6, 0);
+        DISPLAY.move(-3, 0);
     }
     if(GLib.Key.isDown(GLib.Key.right)){
-        DISPLAY.move(6, 0);
+        DISPLAY.move(3, 0);
     }
 
     if(Math.abs(500-DISPLAY.x)<=1&&Math.abs(300-DISPLAY.y)<=1){

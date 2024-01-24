@@ -67,7 +67,7 @@ class GLib {
     // ends a game loop
     static endGame(game){
         clearInterval(game);
-        return null;
+        return;
     }
 
     // pause/unpause the game

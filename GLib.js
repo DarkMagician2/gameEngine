@@ -246,18 +246,21 @@ class Entity extends GLib {
     }
 
     // allows the deletion of an instance
-    delete(delay, property){
-        setTimeout(()=>{
-            if(property!="all"){
-                this.entity.removeAttribute(property);
-            } else {
-                this.entity.remove();
-                delete GLib.entities[this.index];
-                for(let i=0;i<Entity.entitiesLength;i++){
-                    GLib.entities[i].pos = i;
+    delete(property){
+        if(property!="all"){
+            this.entity.removeAttribute(property);
+        } else {
+            this.entity.remove();
+            delete GLib.entities[this.index];
+            let i = 0;
+            for(let key in GLib.entities){
+                if(GLib.entities[key]!=GLib.entities[i]){
+                    GLib.entities[i] = GLib.entities[key];
+                    delete GLib.entities[key];
                 }
+                i++;
             }
-        },delay);
+        }
     }
 
     // a function to check if the instance is touching another instance
@@ -327,7 +330,7 @@ TOUCHING.makeMoveable(3);
 TEST.onTouch(TOUCHING, null, ()=>{
     alert("trigger");
     DISPLAY.moveTo(0, 0);
-    TOUCHING.delete(0, "all");
+    TOUCHING.delete("all");
 });
 let gameLoop = GLib.startGame(DISPLAY, (mult)=>{
     DISPLAY.entity.innerHTML = Entity.entitiesLength;

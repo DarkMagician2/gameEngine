@@ -276,7 +276,7 @@ class Entity extends GLib {
     async onTouch(element, func, not){
         this.oTS = 0;
         this.oT = setInterval(()=>{
-            if(element==null){
+            if(GLib.entities[element.index]!=element){
                 clearInterval(this.oT);
             }
             this.isTouching(element).then((value)=>{
@@ -301,7 +301,7 @@ class Entity extends GLib {
     // a function which allows some code to be run when an instance is touching and/or not touching an instance
     async whileTouching(element, func, not){
         this.wT = setInterval(()=>{
-            if(element==null){
+            if(GLib.entities[element.index]!=element){
                 clearInterval(this.wT);
             }
             this.isTouching(element).then((value)=>{

@@ -144,7 +144,7 @@
               if(this.nextPos.moveX==0){
                   Object.keys(GLib.entities).forEach((key)=>{
                       if(GLib.entities[key]!=this&&GLib.entities[key].moveable){
-                          this.isTouching(GLib.entities[key]).then((value)=>{
+                          GLib.isTouching(this.nextPos, GLib.entities[key]).then((value)=>{
                               if(value){
                                   this.nR = true;
                               } else if(this.nextPos.x+this.width>GLib.w){
@@ -159,7 +159,7 @@
               if(this.nextPos.moveX==1){
                   Object.keys(GLib.entities).forEach((key)=>{
                       if(GLib.entities[key]!=this&&GLib.entities[key].moveable){
-                          this.isTouching(GLib.entities[key]).then((value)=>{
+                        GLib.isTouching(this.nextPos, GLib.entities[key]).then((value)=>{
                               if(value){
                                   this.nL = true;
                               } else if(this.nextPos.x<0){
@@ -176,7 +176,7 @@
               if(this.nextPos.moveY==0){
                   Object.keys(GLib.entities).forEach((key)=>{
                       if(GLib.entities[key]!=this&&GLib.entities[key].moveable){
-                          this.isTouching(GLib.entities[key]).then((value)=>{
+                        GLib.isTouching(this.nextPos, GLib.entities[key]).then((value)=>{
                               if(value){
                                   this.nD = true;
                               } else if(this.nextPos.y+this.height>GLib.h){
@@ -191,7 +191,7 @@
               if(this.nextPos.moveY==1){
                   Object.keys(GLib.entities).forEach((key)=>{
                       if(GLib.entities[key]!=this&&GLib.entities[key].moveable){
-                          this.isTouching(GLib.entities[key]).then((value)=>{
+                        GLib.isTouching(this.nextPos, GLib.entities[key]).then((value)=>{
                               if(value){
                                   this.nU = true;
                               } else if(this.nextPos.y<0){
@@ -204,7 +204,7 @@
                   });
               }
               if(this.x+x<=GLib.w-this.width&&this.x+x>=0){
-                  this.x += (x<0&&this.nL) ? 0 : (x>0&&this.nR) ? 0 : (x!=0) ? x : 0;
+                  this.x += (x<0&&!this.nL) ? x : (x>0&&!this.nR) ? x : 0;
               } else if(this.x+x<0){
                   this.x = 0;
               } else if(this.x+x>GLib.w-this.width){
@@ -402,15 +402,16 @@
       let index = 0;
       const DISPLAY = new Entity({color: "#123456", name: "no"});
       const TOUCHING = new Entity({x: 100, y: 100});
+      const TOUCHING2 = new Entity({x: 200, y: 100});
       const TEST = new Entity({x: 200, y: 200, width: 500, height: 1000});
       TOUCHING.makeMoveable(3);
       DISPLAY.makeMoveable(3);
+      TOUCHING2.makeMoveable(3);
       TEST.onTouch(TOUCHING, ()=>{
           DISPLAY.moveTo(0, 0);
           TOUCHING.delete(0, "all");
       });
       let gameLoop = GLib.startGame(DISPLAY, (mult)=>{
-          console.log(DISPLAY.nD, DISPLAY.nL, DISPLAY.nR, DISPLAY.nU);
           DISPLAY.entity.innerHTML = `${DISPLAY.nU}, ${GLib.w}`;
           if(GLib.Key.isDown(GLib.Key.up)){
               index++;

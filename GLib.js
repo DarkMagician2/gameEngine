@@ -25,10 +25,10 @@ class GLib {
             return this.pressed[key];
         },
         keydown: function (event){
-            this.pressed[event.key] = true;
+            this.pressed[event.key.toLowerCase()] = true;
         },
         keyup: function (event){
-            delete this.pressed[event.key];
+            delete this.pressed[event.key.toLowerCase()];
         }
     }
     
